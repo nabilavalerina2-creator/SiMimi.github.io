@@ -911,7 +911,7 @@
 
     <script>
         // URL Google Apps Script - GANTI DENGAN URL ANDA
-        const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbyfrUxZATfcYQ4-dwKOSH-y7A8VDLaz6I_ozI3D4uDAkRJRxW7nWNoEFJ1oX3JKCN--Jg/exec';
+        const GOOGLE_SHEET_URL = 'hhttps://script.google.com/macros/s/AKfycbyLP699VHO7Xz18rRJ8HN_z1mxcf9AvSn9qNWXTbvLDyIk6O_0Rs3RZh0MNrDdgjg4e-Q/exechttps://script.google.com/macros/s/AKfycbyLP699VHO7Xz18rRJ8HN_z1mxcf9AvSn9qNWXTbvLDyIk6O_0Rs3RZh0MNrDdgjg4e-Q/exec';
         
         // Global Variables
         let currentUser = null;
@@ -1098,35 +1098,56 @@
 
         // ========== SUBMIT REQUEST FUNCTION ==========
         // User mengajukan permohonan - TIDAK dikirim ke Google Sheets
-        async function submitRequest() {
-            const request = {
-                id: Date.now(),
-                email: currentUser.email,
-                bagian: document.getElementById('bagian').value,
-                tanggal: document.getElementById('tanggalAcara').value,
-                jenisAcara: document.getElementById('jenisAcara').value,
-                namaAcara: document.getElementById('namaAcara').value,
-                jumlahPeserta: document.getElementById('jumlahPeserta').value,
-                suratPermintaan: document.getElementById('suratPermintaan').files[0]?.name || 'Tidak ada',
-                rundown: document.getElementById('rundownAcara').files[0]?.name || 'Tidak ada',
-                status: 'Pending',
-                catatan: '',
-                tanggalPengajuan: new Date().toLocaleDateString('id-ID'),
-                waktuPengajuan: new Date().toLocaleTimeString('id-ID')
-            };
+async function submitRequest() {
+    const btnSubmit = document.querySelector('#ajukanForm button[type="submit"]');
+    const originalText = btnSubmit.innerHTML;
+    btnSubmit.innerHTML = '⏳ Sedang Mengirim...';
+    btnSubmit.disabled = true;
 
-            requests.push(request);
-            saveRequestsToStorage();
+    try {
+        const requestData = {
+            id: Date.now(), // ID Unik
+            pengaju: currentUser.email, // Email yang login
+            email: currentUser.email,   
+            bagian: document.getElementById('bagian').value,
+            tanggalAcara: document.getElementById('tanggalAcara').value, 
+            tanggal: document.getElementById('tanggalAcara').value, // Cadangan utk tampilan lokal
+            jenisAcara: document.getElementById('jenisAcara').value,
+            namaAcara: document.getElementById('namaAcara').value,
+            jumlahPeserta: document.getElementById('jumlahPeserta').value,
+            suratPermintaan: document.getElementById('suratPermintaan').files[0]?.name || 'Tidak ada',
+            rundown: document.getElementById('rundownAcara').files[0]?.name || 'Tidak ada',
+            status: 'Pending',
+            catatan: '-',
+            tanggalPengajuan: new Date().toLocaleDateString('id-ID'),
+            waktuPengajuan: new Date().toLocaleTimeString('id-ID')
+        };
+        
+        console.log("Mengirim data ke server...", requestData);
+        
+               await sendToGoogleSheet(requestData);
 
-            console.log('📝 Permohonan dibuat (status: Pending) - Belum dikirim ke Google Sheets');
+                requests.push(requestData);
+        saveRequestsToStorage();
 
-            alert('✅ Permohonan berhasil diajukan! Menunggu approval admin.');
-            document.getElementById('ajukanForm').reset();
-            document.getElementById('suratFile').innerHTML = '';
-            document.getElementById('rundownFile').innerHTML = '';
-            showPage('dashboard');
-            loadUserData();
-        }
+              alert('✅ Permohonan BERHASIL dikirim dan masuk ke Database!');
+        
+        // Reset Form & Kembali ke Dashboard
+        document.getElementById('ajukanForm').reset();
+        document.getElementById('suratFile').innerHTML = '';
+        document.getElementById('rundownFile').innerHTML = '';
+        showPage('dashboard');
+        loadUserData();
+
+    } catch (error) {
+        console.error("Gagal submit:", error);
+        alert('❌ Gagal mengirim data. Cek koneksi internet!');
+    } finally {
+        // Kembalikan tombol seperti semula
+        btnSubmit.innerHTML = originalText;
+        btnSubmit.disabled = false;
+    }
+}
 
         // ========== FILE UPLOAD FUNCTIONS ==========
         function handleFileUpload(input, targetId) {
@@ -1613,4 +1634,5 @@
         }
     </script>
 </body>
+
 </html>
